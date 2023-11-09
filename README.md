@@ -1,6 +1,6 @@
 Notebooks used to analyze sea ice data for LKFs.
 
-fesom_data: read FESOM data from eerie catalogues, interpolate and create nc file
+fesom_data: read FESOM data from eerie catalogues, interpolate and create nc file \n
 icon_data: read ICON data from eerie catalogues, interpolate and create nc file
 use lkf_detect to detect LKFs, save them as images and create a gif
 
