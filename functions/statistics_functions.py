@@ -3,7 +3,7 @@ import xarray as xr
 import os
 
 
-def get_lkf_data(path_ds, years):
+def get_lkf_data(files):
     '''returns a list with the lkf data for each day (len(lkfs) = ntimesteps).
     the lkfs at one day are stored as (p_len,7) shaped array with p_len
     being their pixel length. it has 7 attributes like longitude and latitude,
@@ -11,8 +11,8 @@ def get_lkf_data(path_ds, years):
     '''
     datasets, lkfs = [], []
     
-    for year in years:
-        lkf_data = np.load(path_ds + f'ds_{year}.npy', allow_pickle=True)[0]
+    for file in files:
+        lkf_data = np.load(file, allow_pickle=True)[0]
         datasets += lkf_data,
 
         lkfs_y = np.zeros_like(lkf_data.indexes[:365], dtype='object')
