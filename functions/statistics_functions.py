@@ -232,6 +232,16 @@ def get_lkf_lifetimes(paths):
 
     return lifetimes, mean_lifetime
 
+def av_sd(data,i=3):
+    
+    av = np.mean(data[:i], axis=0)
+    sd = np.sqrt(np.var(data[:i], axis=0))
+    
+    av_90 = np.mean(data[i:], axis=0)
+    sd_90 = np.sqrt(np.var(data[i:], axis=0))
+
+    return av, sd, av_90, sd_90
+
 def coarse_graining(field, coarse_grid_box_size_km, res_km):
 
     n_rows = round(np.shape(field)[0] * res_km / coarse_grid_box_size_km)
