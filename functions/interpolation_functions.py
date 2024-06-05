@@ -7,17 +7,6 @@ import logging
 from scipy.spatial import cKDTree
 
 
-def proj_selection(projection):
-    if projection == "pc":
-        projection_ccrs = ccrs.PlateCarree()
-    elif projection == "mer":
-        projection_ccrs = ccrs.Mercator()
-    elif projection == "np":
-        projection_ccrs = ccrs.NorthPolarStereo()
-    elif projection == "sp":
-        projection_ccrs = ccrs.SouthPolarStereo()
-    return projection_ccrs
-
 def region_cartopy(box, res, projection="pc"):
     """ Computes coordinates for the region 
     Parameters
@@ -43,7 +32,14 @@ def region_cartopy(box, res, projection="pc"):
     lat : numpy array
         2 d array of latitudes
     """
-    projection_ccrs = proj_selection(projection)
+    if projection == "pc":
+        projection_ccrs = ccrs.PlateCarree()
+    elif projection == "mer":
+        projection_ccrs = ccrs.Mercator()
+    elif projection == "np":
+        projection_ccrs = ccrs.NorthPolarStereo()
+    elif projection == "sp":
+        projection_ccrs = ccrs.SouthPolarStereo()
 
     if not res is None:
         lonNumber, latNumber = res
@@ -120,32 +116,37 @@ def lon_lat_to_cartesian(lon, lat, R=6371000):
     z = R * np.sin(lat_r)
     return x, y, z
 
-def interpolate(a_ice, u_ice, v_ice, inds, distances, ntimesteps, shape, r=5000):
+def interpolate(a_ice, h_ice, u_ice, v_ice, inds, distances, ntimesteps, shape, r=5000):
 
     radius_of_influence = r
     
     a_ice_int = np.zeros((ntimesteps,*shape))
+    h_ice_int = np.zeros_like(a_ice_int)
     u_ice_int = np.zeros_like(a_ice_int)
     v_ice_int = np.zeros_like(a_ice_int)
 
     for i in range(ntimesteps):
         a_ = a_ice[i].values[inds]
+        h_ = h_ice[i].values[inds]
         u_ = u_ice[i].values[inds]
         v_ = v_ice[i].values[inds]
 
         a_[distances >= radius_of_influence] = np.nan
+        h_[distances >= radius_of_influence] = np.nan
         u_[distances >= radius_of_influence] = np.nan
         v_[distances >= radius_of_influence] = np.nan
 
         a_.shape = shape
+        h_.shape = shape
         u_.shape = shape
         v_.shape = shape
         
         a_ice_int[i] = a_
+        h_ice_int[i] = h_
         u_ice_int[i] = u_
         v_ice_int[i] = v_
 
-    return a_ice_int, u_ice_int, v_ice_int
+    return a_ice_int, h_ice_int, u_ice_int, v_ice_int
 
 def create_nc_file(a_ice_int, h_ice_int, u_ice_int, v_ice_int, int_lons, int_lats, ntimesteps, name):
     ds = nc.Dataset(name, 'w', format='NETCDF4')
@@ -176,3 +177,4 @@ def create_nc_file(a_ice_int, h_ice_int, u_ice_int, v_ice_int, int_lons, int_lat
     lat[:,:] = int_lats
 
     ds.close()
+    
