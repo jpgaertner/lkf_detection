@@ -1,13 +1,16 @@
 import numpy as np
-import xarray as xr
 import os
 
+xticks = np.array([31,59,90,120,151,181,212,243,273,304,334,365])
+xticks_minor = np.array([16,45,75,105,136,166,197,228,258,289,319,350])
+xticks_labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-def get_lkf_data(files):
+def get_lkfs(files):
     '''returns a list with the lkf data for each day (len(lkfs) = ntimesteps).
     the lkfs at one day are stored as (p_len,7) shaped array with p_len
-    being their pixel length. it has 7 attributes like longitude and latitude,
-    stored in the [:,2] and [:,3] position, respectively.
+    being their pixel length. it has 7 attributes:
+    pixel coordinate x, pixel coordinate y, longitude, latitude,
+    divergence, shear, and vorticity
     '''
     datasets, lkfs = [], []
     
@@ -28,7 +31,7 @@ def get_lkf_data(files):
     return datasets, lkfs
 
 def get_tracks(datasets):
-    '''returns a list with the tracks for each day (len(tracks_all) = ntimesteps-1).
+    '''returns a list with the tracks for each day (len(tracks_all) = ntimesteps).
     the tracks at day i are matching pairs, i.e. the number of an LKF in record i
     and the number of an associated LKF in record i+1.
     '''
@@ -51,6 +54,7 @@ def get_tracks(datasets):
             else:
                 tracks_y += np.array([[np.nan, np.nan]]),
         
+        tracks_y += np.array([[np.nan, np.nan]]), # to make it of length 365
         tracks += tracks_y,
     
     return tracks
@@ -106,7 +110,7 @@ def get_paths(lkfs, tracks):
         paths_all_y = paths_y.copy()
 
         # remove already tracked paths, i.e. delete a path from day n if
-        # it starts at day n-1, so only the paths start start at day n remain
+        # it starts at day n-1, so only the paths that start at day n remain
         already_tracked = np.zeros(len(paths_y)-1,dtype='object')
         for it in range(len(paths_y)-1):
             for ind, item in enumerate(paths_y[it]):
@@ -144,30 +148,11 @@ def get_n_lkfs(lkfs):
         
     return n_lkfs
 
-def get_res_km(datasets):
-    '''get the spatial resolution of the shrinked
-    Arctic basin in km
+def get_res_km(lkf_data):
+    '''get the spatial resolution of a dataset in km
     '''
     
-    lkf_data = datasets[0]
-    res_km_og = 0.0005 * (np.mean(lkf_data.dxu) + np.mean(lkf_data.dyu))
-    
-    # arctic basin
-    a = max([0,lkf_data.index_y[0][0]-1])   # min lon index
-    b = lkf_data.index_y[0][-1]+2           # max lon index
-    c = max([0,lkf_data.index_x[0][0]-1])   # min lat index
-    d = lkf_data.index_x[0][-1]+2           # max lat index
-    e = lkf_data.red_fac                    # ~ coarse graining = 1
-
-    lon = lkf_data.lon[a:b:e,c:d:e]
-    lat = lkf_data.lat[a:b:e,c:d:e]
-    
-    y_res = len(lkf_data.dyu)/np.shape(lon)[0] * res_km_og
-    x_res = len(lkf_data.dxu)/np.shape(lon)[1] * res_km_og
-
-    res_km = (x_res + y_res) / 2
-    
-    return res_km
+    return 0.0005 * (np.mean(lkf_data.dxu) + np.mean(lkf_data.dyu))
 
 def get_lkf_length(lkfs, res_km):
     '''calculate the length of every LKF as well as the mean and
@@ -178,7 +163,7 @@ def get_lkf_length(lkfs, res_km):
     for yr in range(len(lkfs)):
 
         length_y, av_length_y, total_length_y = [[] for _ in range(3)]
-        for day in range(365):
+        for day in range(len(lkfs[0])):
 
             length_d = []
             for lkf in lkfs[yr][day]:
@@ -232,7 +217,11 @@ def get_lkf_lifetimes(paths):
 
     return lifetimes, mean_lifetime
 
-def av_sd(data,i=3):
+def av_sd(data,i):
+    '''get the interannual mean with its standart deviation
+    for each decade. i splits the decades/ datasets:
+    if the datasets are 2013, 2015, 2016, 2094, 2097 => i = 3
+    '''
     
     av = np.mean(data[:i], axis=0)
     sd = np.sqrt(np.var(data[:i], axis=0))
@@ -243,6 +232,10 @@ def av_sd(data,i=3):
     return av, sd, av_90, sd_90
 
 def coarse_graining(field, coarse_grid_box_size_km, res_km):
+    '''apply a coarse graining filter to field. res_km is the spatial
+    resolution of the input field, coarse_grid_box_size_km is the length
+    of one side of the coarse grid cell.
+    '''
 
     n_rows = round(np.shape(field)[0] * res_km / coarse_grid_box_size_km)
     n_cols = round(np.shape(field)[1] * res_km / coarse_grid_box_size_km)
