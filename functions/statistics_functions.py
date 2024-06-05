@@ -6,12 +6,19 @@ xticks_minor = np.array([16,45,75,105,136,166,197,228,258,289,319,350])
 xticks_labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 def get_lkfs(files):
-    '''returns a list with the lkf data for each day (len(lkfs) = ntimesteps).
-    the lkfs at one day are stored as (p_len,7) shaped array with p_len
+    '''files is a list containing the paths to the lkf_data files
+    (see in detect_lkfs: np.save(path_ds + f'ds_{year}', [lkf_data])).
+    
+    datasets is a list containing the loaded lkf_data objects.
+    lkfs is a list containing the lkf data for each dataset and day.
+    len(lkfs) = len(datasets), len(lkfs[i]) = ntimesteps.
+    
+    the lkfs at a certain day are stored as (p_len,7) shaped array with p_len
     being their pixel length. it has 7 attributes:
     pixel coordinate x, pixel coordinate y, longitude, latitude,
     divergence, shear, and vorticity
     '''
+    
     datasets, lkfs = [], []
     
     for file in files:
@@ -31,9 +38,10 @@ def get_lkfs(files):
     return datasets, lkfs
 
 def get_tracks(datasets):
-    '''returns a list with the tracks for each day (len(tracks_all) = ntimesteps).
-    the tracks at day i are matching pairs, i.e. the number of an LKF in record i
-    and the number of an associated LKF in record i+1.
+    '''returns a list with the tracks for each dataset and day.
+    len(tracks) = len(datasets), len(tracks[i]) = ntimesteps.
+    the tracks at day n are matching pairs, i.e. the number of an LKF in day n
+    and the number of the associated LKF in day n+1.
     '''
     
     tracks = []
@@ -60,19 +68,21 @@ def get_tracks(datasets):
     return tracks
 
 def get_paths(lkfs, tracks):
-    '''returns the array lkf_tracks:
-    lkf_tracks[i] are the lkf paths that start at day i. it contains
+    '''returns a list with the paths for each datasets and day.
+    tracks[i][n] are the lkf paths of datasets[i] that start at day n. it contains
     the index of the lkfs at every day they are tracked to.
+    paths_all[i][n] also contains the paths that go through day n.
 
     e.g.
-    lkf_tracks[0][0] = [0]           -> lkf 0 at day 1 is not tracked to day 2
-    lkf_tracks[0][4] = [4, 2, 5]     -> lkf 4 is tracked until day 3. in the
+    paths[i][0][0] = [0]           -> lkf 0 at day 1 is not tracked to day 2
+    paths[i][0][4] = [4, 2, 5]     -> lkf 4 is tracked until day 3. in the
                                         second record, it has the index 2, in
                                         the third record the index 5
-
+    
     todo: in this configuration, only the first path is saved if the lkf has
     two associated feature in the following record.
     '''
+    
     paths, paths_all = [], []
     
     for lkfs_y, tracks_y in zip(lkfs, tracks):
@@ -133,10 +143,10 @@ def get_paths(lkfs, tracks):
     return paths, paths_all
 
 def get_n_lkfs(lkfs):
-    '''returns a list with the number of detected lkfs at each
-    time step in each year/ dataset
+    '''returns a list with the number of detected lkfs at every
+    time step in each dataset
     '''
-
+    
     n_lkfs = []
     for lkfs_y in lkfs:
         
@@ -149,16 +159,16 @@ def get_n_lkfs(lkfs):
     return n_lkfs
 
 def get_res_km(lkf_data):
-    '''get the spatial resolution of a dataset in km
+    '''returns the spatial resolution of a dataset in km
     '''
-    
+
     return 0.0005 * (np.mean(lkf_data.dxu) + np.mean(lkf_data.dyu))
 
 def get_lkf_length(lkfs, res_km):
-    '''calculate the length of every LKF as well as the mean and
-    total LKF length at every time step
+    '''returns the length of every LKF as well as the mean and
+    total LKF length at every time step in each dataset
     '''
-
+    
     length, av_length, total_length = [[] for _ in range(3)]
     for yr in range(len(lkfs)):
 
@@ -185,8 +195,7 @@ def get_lkf_length(lkfs, res_km):
 
 def get_lkf_lifetimes(paths):
     '''returns the lifetimes of each tracked path that starts at the
-    respective day, as well as the total mean lifetime of all tracked paths
-    and the total lifetime of all tracked paths that are longer than one day.
+    respective day, as well as the total mean lifetime of all tracked paths.
     '''
     
     lifetimes, mean_lifetime = [], []
