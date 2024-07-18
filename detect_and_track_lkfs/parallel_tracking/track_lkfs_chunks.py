@@ -14,4 +14,4 @@ step = 10
 
 lkf_data = np.load(path_ds + f'ds_{year}_{res}.npy', allow_pickle=True)[0]
 
-lkf_data.track_lkfs(indexes=np.arange(lower,lower+step))
+lkf_data.track_lkfs(indexes=np.arange(lower,lower+step+1))
