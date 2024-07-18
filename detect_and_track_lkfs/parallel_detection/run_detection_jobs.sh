@@ -2,7 +2,7 @@
 
 years=({2093..2100})
 step=10
-res='4km'
+res="4km"
 
 # needed for selecting the number of tasks and nodes in the job script
 round_up() {
@@ -25,7 +25,7 @@ for year in "${years[@]}"; do
     done
     
     # adjust job script and submit it
-    sed -i "2s/.*/#SBATCH --job-name=${year}/" detection_jobs.sh
+    sed -i "2s/.*/#SBATCH --job-name=d${year}/" detection_jobs.sh
     sed -i "14s/.*/year=${year}/" detection_jobs.sh
     sed -i "15s/.*/step=${step}/" detection_jobs.sh
     ntasks=$(round_up 365/$step)
