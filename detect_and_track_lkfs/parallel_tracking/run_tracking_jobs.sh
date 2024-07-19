@@ -1,7 +1,7 @@
 #!/bin/bash
 
 years=({2013..2020})
-step=10
+step=20
 res="4km"
 
 # needed for selecting the number of tasks and nodes in the job script
