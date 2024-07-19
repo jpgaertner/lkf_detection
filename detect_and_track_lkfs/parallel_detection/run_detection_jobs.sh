@@ -29,8 +29,6 @@ for year in "${years[@]}"; do
     sed -i "14s/.*/year=${year}/" detection_jobs.sh
     sed -i "15s/.*/step=${step}/" detection_jobs.sh
     ntasks=$(round_up 365/$step)
-    nodes=$(round_up $ntasks*0.1)
-    sed -i "5s/.*/#SBATCH --nodes=$nodes/" detection_jobs.sh
     sed -i "6s/.*/#SBATCH --ntasks=$ntasks/" detection_jobs.sh
     sbatch detection_jobs.sh
 done
