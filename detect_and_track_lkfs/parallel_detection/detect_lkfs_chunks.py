@@ -5,14 +5,14 @@ from dataset import *
 import warnings
 warnings.filterwarnings('ignore')
 
-res = '4km'
+res = '1km'
 path = '/work/bk1377/a270230/'
 path_nc   = path + f'interpolated_fesom_output/{res}/'
-path_lkfs = path + 'lkfs/'
+path_lkfs = path + f'lkfs/{res}/'
 
-year = 2100
+year = 2016
 lower = 360
-step = 10
+step = 20
 
 lkf_data = process_dataset(netcdf_file = path_nc + f'{year}_{res}.nc',
                            output_path = path_lkfs,
