@@ -1,8 +1,8 @@
 #!/bin/bash
 
-years=({2093..2100})
-step=20
-res="4km"
+years=(2013)
+step=10
+res="1km"
 
 # needed for selecting the number of tasks and nodes in the job script
 round_up() {
@@ -15,10 +15,10 @@ for year in "${years[@]}"; do
     for (( day = 0; day <= 365; day += $step )); do
     
         # select dataset for the individual job
-        sed -i "8s/.*/res = '${res}'/" detect_lkfs_chunks.py
-        sed -i "13s/.*/year = $year/" detect_lkfs_chunks.py
-        sed -i "14s/.*/lower = $day/" detect_lkfs_chunks.py
-        sed -i "15s/.*/step = $step/" detect_lkfs_chunks.py
+        sed -i "9s/.*/res = '${res}'/" detect_lkfs_chunks.py
+        sed -i "10s/.*/year = $year/" detect_lkfs_chunks.py
+        sed -i "11s/.*/lower = $day/" detect_lkfs_chunks.py
+        sed -i "12s/.*/step = $step/" detect_lkfs_chunks.py
 
         # save as new file
         cp detect_lkfs_chunks.py /work/bk1377/a270230/python_scripts/detect_lkfs_chunks_${year}_${day}.py
