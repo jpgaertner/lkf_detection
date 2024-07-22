@@ -39,7 +39,7 @@ if os.path.isdir(path_detected_lkfs):
     # create array of the lkfs that still need to be detected
     # (the -1 converts from day to index in days_all)
     days_all = np.arange(1,366)
-    days_to_detect = np.delete(days_all, np.array(detected_days) - 1) # the -1
+    days_to_detect = np.delete(days_all, np.array(detected_days) - 1)
 
 
 ### detect lkfs ###
