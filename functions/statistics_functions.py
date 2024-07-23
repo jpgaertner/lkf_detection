@@ -226,19 +226,17 @@ def get_lkf_lifetimes(paths):
 
     return lifetimes, mean_lifetime
 
-def av_sd(data,i):
-    '''get the interannual mean with its standart deviation
-    for each decade. i splits the decades/ datasets:
-    if the datasets are 2013, 2015, 2016, 2094, 2097 => i = 3
+def av_sd(data, startyear, endyear, years):
+    '''get the interannual mean with its standart deviation for
+    the time from startyear til endyear
     '''
+    istart = np.where(np.array(years) == startyear)[0][0]
+    iend = np.where(np.array(years) == endyear)[0][0]
     
-    av = np.mean(data[:i], axis=0)
-    sd = np.sqrt(np.var(data[:i], axis=0))
-    
-    av_90 = np.mean(data[i:], axis=0)
-    sd_90 = np.sqrt(np.var(data[i:], axis=0))
+    av = np.mean(data[istart:iend], axis=0)
+    sd = np.sqrt(np.var(data[istart:iend], axis=0))
 
-    return av, sd, av_90, sd_90
+    return av, sd
 
 def coarse_graining(field, coarse_grid_box_size_km, res_km):
     '''apply a coarse graining filter to field. res_km is the spatial
