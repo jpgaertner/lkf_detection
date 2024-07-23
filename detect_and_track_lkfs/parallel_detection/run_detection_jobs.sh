@@ -1,6 +1,6 @@
 #!/bin/bash
 
-years=({2013..2016})
+years=(2015 2016)
 step=10
 res="1km"
 
@@ -70,12 +70,12 @@ for year in "${years[@]}"; do
     ### adjust job script and submit it ###
     
     sed -i "s/^\(#SBATCH --job-name=\).*\$/\1d$year/" detection_jobs.sh
+    #sed -i "s/^\(#SBATCH --output=output_\).*\$/\1$year.txt/" detection_jobs.sh
     ntasks=${#startdays_of_chunks[@]}
     sed -i "s/^\(#SBATCH --ntasks=\).*\$/\1$ntasks/" detection_jobs.sh
     startdays_of_chunks_str=$(printf '%s ' "${startdays_of_chunks[@]}")
     sed -i "s/^\(startdays_of_chunks=\).*/\1(${startdays_of_chunks_str})/" detection_jobs.sh
     sed -i "s/^\(year=\).*\$/\1$year/" detection_jobs.sh
 
-    
     sbatch detection_jobs.sh
 done
