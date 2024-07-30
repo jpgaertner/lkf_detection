@@ -247,14 +247,14 @@ def av_sd(data, startyear, endyear, years):
 
     return av, sd
 
-def coarse_graining(field, coarse_grid_box_size_km, res_km):
+def coarse_graining(field, coarse_grid_box_len_km, res_km):
     '''apply a coarse graining filter to field. res_km is the spatial
-    resolution of the input field, coarse_grid_box_size_km is the length
+    resolution of the input field, coarse_grid_box_len_km is the length
     of one side of the coarse grid cell.
     '''
 
-    n_rows = round(np.shape(field)[0] * res_km / coarse_grid_box_size_km)
-    n_cols = round(np.shape(field)[1] * res_km / coarse_grid_box_size_km)
+    n_rows = round(np.shape(field)[0] * res_km / coarse_grid_box_len_km)
+    n_cols = round(np.shape(field)[1] * res_km / coarse_grid_box_len_km)
 
     rows = np.array_split(field, n_rows, axis=0)
     columns = []
