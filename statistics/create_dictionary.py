@@ -78,18 +78,18 @@ for y, year in enumerate(years):
     df_y['total length']  = total_length[y]
     df_y['mean lifetime'] = mean_lifetime[y]
     
-    LKFs[f'{year}'] = dict(
-        total = df_y,
-    )
+    LKFs[f'{year}'] = df_y
     
     # shift indices so they go from 1 to 365 instead of from 0 to 364
-    LKFs[f'{year}']['total'].index = LKFs[f'{year}']['total'].index + 1
+    LKFs[f'{year}'].index = LKFs[f'{year}'].index + 1
     
     # store variables of individual lkfs
+    LKFs[f'{year} daily'] = dict()
     for d in range(365):
         df_d = pd.DataFrame(length[y][d], columns=['length'])
         df_d['lifetime'] = lifetimes_all[y][d]
         
-        LKFs[f'{year}'][f'{d+1}'] = df_d
+        LKFs[f'{year} daily'][f'{d+1}'] = df_d
+
         
 np.save(path_stat + f'LKFs_{res}.npy', [LKFs])
