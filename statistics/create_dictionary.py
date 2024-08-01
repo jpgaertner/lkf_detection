@@ -55,6 +55,21 @@ lifetimes_all, _ = get_lkf_lifetimes(paths_all)
 try: LKFs = np.load(path_stat + f'LKFs_{res}.npy', allow_pickle=True)[0]
 except: LKFs = dict()
 
+if True:
+    # calculate decadal mean and standart deviation of each lkf variable
+    # and store it in the dictionary
+    for ystart, yend in zip([2013, 2093], [2020, 2100]):
+
+        df = pd.DataFrame()
+        df['number av'], df['number sd']               = av_sd(n_lkfs, ystart, yend, years)
+        df['density av'], df['density sd']             = av_sd(rho_lkfs, ystart, yend, years)
+        df['mean length av'], df['mean length sd']     = av_sd(mean_length, ystart, yend, years)
+        df['total length av'], df['total length sd']   = av_sd(total_length, ystart, yend, years)
+        df['mean lifetime av'], df['mean lifetime sd'] = av_sd(mean_lifetime, ystart, yend, years)
+
+        decade = f'{ystart} - {yend}'
+        LKFs[decade] = df
+
 # store each lkf variable for each year
 for y, year in enumerate(years):
     df_y = pd.DataFrame(n_lkfs[y], columns=['number'])
