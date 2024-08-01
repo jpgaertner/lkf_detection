@@ -82,6 +82,9 @@ for y, year in enumerate(years):
         total = df_y,
     )
     
+    # shift indices so they go from 1 to 365 instead of from 0 to 364
+    LKFs[f'{year}']['total'].index = LKFs[f'{year}']['total'].index + 1
+    
     # store variables of individual lkfs
     for d in range(365):
         df_d = pd.DataFrame(length[y][d], columns=['length'])
