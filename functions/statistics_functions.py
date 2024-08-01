@@ -54,7 +54,6 @@ def get_tracks(datasets):
     
     tracks = []
     for lkf_data in datasets:
-        print(lkf_data.netcdf_file)
     
         tracks_y = []
         tracks_list = os.listdir(lkf_data.track_output_path)
