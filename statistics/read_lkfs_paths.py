@@ -28,6 +28,7 @@ for year, area_total_year in enumerate(area_total):
     arr[year,:] = area_total_year
 area_total = arr
 
+# only use the selected years
 inds = [np.where(years_all==year)[0][0] for year in years]
 area_total = area_total[inds]
 
