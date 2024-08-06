@@ -12,20 +12,16 @@ res = '4km'
 path = '/work/bk1377/a270230/'
 path_stat = path + 'statistics/'
 
-# select the years you want to analyze
-years = [i for i in range(2013,2021)]
-years += [i for i in range(2093,2101)]
-
 # load mean ice concentration, total ice covered area, mean ice thickness,
-# and total ice volume for all years of the model run (1986 - 2100 for 4km,
-# 2013 - 2020 & 2093 - 2100 for 1km)
+# and total ice volume for all analyzed years 
 data = np.load(path_stat + f'lkfs_paths_{res}.npz', allow_pickle=True)
 years, lkfs, paths, paths_all = [data[key] for key in data.files]
 
 # load mean ice concentration, total ice covered area, mean ice thickness,
-# and total ice volume for all years
+# and total ice volume for all years of the model run (1986 - 2100 for 4km,
+# 2013 - 2020 & 2093 - 2100 for 1km)
 a_mean, area_total, h_mean, ice_vol_total, years_all = np.load(
-    path_stat + f'a_mean_tot_h_mean_tot_{res}.npy', allow_pickle=True)
+    path_stat + f'ice_area_thickness_{res}.npy', allow_pickle=True)
 
 # make an array of the right np.shape out of area_total
 arr = np.zeros((len(area_total),365))
@@ -33,7 +29,7 @@ for year, area_total_year in enumerate(area_total):
     arr[year,:] = area_total_year
 area_total = arr
 
-# only use the selected years
+# only use the analyzed years
 inds = [np.where(years_all==year)[0][0] for year in years]
 area_total = area_total[inds]
 
@@ -51,9 +47,8 @@ lifetimes, mean_lifetime = get_lkf_lifetimes(paths)
 # already counted in previous timesteps
 lifetimes_all, _ = get_lkf_lifetimes(paths_all)
 
-# create lkf dictionary only if it does not already exist
-try: LKFs = np.load(path_stat + f'LKFs_{res}.npy', allow_pickle=True)[0]
-except: LKFs = dict()
+# create lkf dictionary
+LKFs = dict()
 
 if True:
     # calculate decadal mean and standart deviation of each lkf variable
