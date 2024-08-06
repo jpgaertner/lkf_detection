@@ -47,7 +47,7 @@ for year in years:
     for d in range(365):
         LKFs[f'{year}'].loc[d+1,'mean curvature'] = np.nanmean(LKFs[f'{year} daily'][f'{d+1}']['curvature'])
 
-if False:
+if True:
     # collect all mean curvatures in a single array, then calculate the interannual
     # mean and standart deviation for the two time periods and write them into the dictionary
     mean_curvature = []
