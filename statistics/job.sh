@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name=create
+#SBATCH --job-name=4km
 #SBATCH --account=bk1377
 #SBATCH --partition=compute
 #SBATCH --nodes=1
@@ -11,3 +11,5 @@
 export OMP_NUM_THREADS=1
 
 python3 create_dictionary.py
+python3 curvature.py
+python3 lead_or_ridge.py
