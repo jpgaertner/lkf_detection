@@ -4,7 +4,7 @@ from statistics_functions import *
 import numpy as np
 
 
-res = '4km'
+res = '1km'
 
 path = '/work/bk1377/a270230/'
 path_stat = path + 'statistics/'
@@ -37,15 +37,15 @@ for year in years:
         LKFs[f'{year} daily'][f'{d+1}']['vorticity']   = vor_d
 
 # determine whether an lkf is a lead (1), a ridge (2) or not quantifiable (=longer lived) (3).
-# "divergence<0 => lead" only works for the first day of the lkf. on the second day, a lead
-# can have divergence>0 but is still a region of open water
+# "divergence>0 => lead" only works for the first day of the lkf. on the second day, a lead
+# can have divergence<0 but is still a region of open water
 for year in years:
-    LKFs[f'{year} daily']['1']['lead or ridge'] = np.where(LKFs[f'{year} daily']['1']['divergence']<0, 1, 2)
+    LKFs[f'{year} daily']['1']['lead or ridge'] = np.where(LKFs[f'{year} daily']['1']['divergence']>0, 1, 2)
     
     y = np.where(years==year)[0][0]
     for d in range(1,365):
         
-        LKFs[f'{year} daily'][f'{d+1}']['lead or ridge'] = np.where(LKFs[f'{year} daily'][f'{d+1}']['divergence']<0, 1, 2)
+        LKFs[f'{year} daily'][f'{d+1}']['lead or ridge'] = np.where(LKFs[f'{year} daily'][f'{d+1}']['divergence']>0, 1, 2)
         for lkf in range(len(lkfs[y][d])):
             
             for lkf_path in paths_all[0][0]:
