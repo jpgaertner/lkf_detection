@@ -12,6 +12,10 @@ import skimage.morphology
 xticks = np.array([31,59,90,120,151,181,212,243,273,304,334,365])
 xticks_minor = np.array([16,45,75,105,136,166,197,228,258,289,319,350])
 xticks_labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+month_strings = [
+    'January', 'February', 'March', 'April', 'May', 'June', 
+    'July', 'August', 'September', 'October', 'November', 'December'
+]
 
 def get_lkfs(files):
     '''files is a list containing the paths to the lkf_data files
@@ -152,17 +156,14 @@ def get_paths(lkfs, tracks):
 
 def get_n_lkfs(lkfs):
     '''returns a list with the number of detected lkfs at every
-    time step in each dataset
+    time step (day) in each dataset (year)
     '''
     
     n_lkfs = []
-    for lkfs_y in lkfs:
-        
-        n_lkfs_y = []
-        for lkfs_d in lkfs_y:
-            n_lkfs_y += len(lkfs_d),
-            
-        n_lkfs += n_lkfs_y,
+    for lkfs_year in lkfs:
+
+        n_lkfs_year = [len(lkfs_day) for lkfs_day in lkfs_year]
+        n_lkfs += n_lkfs_year,
         
     return n_lkfs
 
@@ -173,78 +174,117 @@ def get_res_km(lkf_data):
     return 0.0005 * (np.mean(lkf_data.dxu) + np.mean(lkf_data.dyu))
 
 def get_lkf_length(lkfs, res_km):
-    '''returns the length of every LKF as well as the mean and
-    total LKF length at every time step in each dataset
+    '''returns the length of every lkf as well as the mean and total lkf length,
+    and the standart deviation at every time step in each dataset
     '''
     
-    length, av_length, total_length = [[] for _ in range(3)]
-    for yr in range(len(lkfs)):
+    # initialize lists containing the data of all datasets
+    length, av_length, sd_length, total_length = [], [], [], []
 
-        length_y, av_length_y, total_length_y = [[] for _ in range(3)]
-        for day in range(len(lkfs[0])):
+    # loop over datasets/ years
+    for lkfs_year in lkfs:
 
-            length_d = []
-            for lkf in lkfs[yr][day]:
+        # initialize lists containing the data of the current dataset/ year
+        length_year, av_length_year, sd_length_year, total_length_year = [], [], [], []
 
-                steps = np.sqrt(
-                      np.diff(np.array(lkf[:,0], dtype='int'))**2 \
-                    + np.diff(np.array(lkf[:,1], dtype='int'))**2) * res_km # step sizes between LKF pixels
-                length_d += np.sum(steps),
+        # loop over time steps/ days
+        for lkfs_day in lkfs_year:
 
-            length_y       += length_d,
-            av_length_y    += np.mean(length_d),
-            total_length_y += np.sum(length_d),
+            # calculate the step size between lkf pixels:
+            # lkf[:,0] and lkf[:,1] contain the pixel coordinates in x and y direction of the current lkf.
+            # the distance between two consecutive lkf pixels is calculated from the difference in x and y
+            # pixel coordinates combined with the size of the pixels in km (spatial resolution, res_km)
+            steps = [
+                np.sqrt(np.array(np.diff(lkf[:,0])**2 + np.diff(lkf[:,1])**2, dtype='int')) * res_km
+                for lkf in lkfs_day # loop over all lkfs in current time step
+            ]
 
-        length       += length_y,       # lenth of every LKF
-        av_length    += av_length_y,    # mean length of LKFs
-        total_length += total_length_y, # total length of LKFs
+            # total lengths of the lkfs in current time step
+            length_day = [np.sum(steps_lkf) for steps_lkf in steps]
+
+            # append the data of one day as single element to the list of the whole year
+            length_year += length_day,
+            av_length_year += np.mean(length_day),
+            sd_length_year += np.std(length_day),
+            total_length_year += np.sum(length_day),
+
+        # append the data of one year as single elements to the final list
+        length += length_year,
+        av_length += av_length_year,
+        sd_length += sd_length_year,
+        total_length += total_length_year,
     
-    return length, av_length, total_length
+    return length, av_length, sd_length, total_length
 
 def get_lkf_lifetimes(paths):
-    '''returns the lifetimes of each tracked path that starts at the
-    respective day, as well as the total mean lifetime of all tracked paths.
+    '''returns the lifetime of every lkf as well as the mean lifetime and
+    the standart deviation at every time step in each dataset
     '''
     
-    lifetimes, mean_lifetime = [], []
-    
-    for paths_y in paths:
-    
-        # lifetime_y[i] contains the lifetimes of the paths that start at day i of year y
-        lifetimes_y = np.empty_like(paths_y, dtype='object')
-        lifetimes_y[-1] = np.empty_like(paths_y[-1], dtype='object')
-        lifetimes_y[:] = np.nan
+    # initialize lists containing the data of all datasets
+    lifetimes, av_lifetime, sd_lifetime = [], [], []
 
-        for i in range(len(paths_y)-1):
-            lifetimes_y[i] = np.zeros_like(paths_y[i], dtype='object')
+    # loop over datasets/ years
+    for paths_year in paths:
 
-            for ind, item in enumerate(paths_y[i]):
-                lifetimes_y[i][ind] = np.array(item).size
+        # initialize lists containing the data of the current dataset/ year
+        lifetimes_year, av_lifetime_year, sd_lifetime_year = [], [], []
 
-        # mean lifetime of all tracked paths
-        mean_lifetime_y = []
-        for lifetimes_timestep in lifetimes_y[:-1]:
-            mean_lifetime_y += lifetimes_timestep.mean(),
+        # loop over all time steps/ days except the last one
+        # (nothing is tracked there, the array just contains a 0)
+        for paths_day in paths_year[:-1]:
 
-        # make it the same length as lifetime
-        mean_lifetime_y += np.nan,
-    
-        lifetimes += lifetimes_y,
-        mean_lifetime += mean_lifetime_y,
+            # loop over all lkfs in current time step and get their lifetime
+            # (= length of their path)
+            lifetimes_day = [np.size(path_lkfs) for path_lkfs in paths_day]
 
-    return lifetimes, mean_lifetime
+            # append the data of one day as single element to the list of the whole year
+            lifetimes_year += lifetimes_day,
+            av_lifetime_year += np.mean(lifetimes_day),
+            sd_lifetime_year += np.std(lifetimes_day),
 
-def av_sd(data, startyear, endyear, years):
+        # append nan day to make it of length of one year
+        lifetimes_year += np.nan,
+        av_lifetime_year += np.nan,
+        sd_lifetime_year += np.nan,
+
+        # append the data of one year as single elements to the final list
+        lifetimes += lifetimes_year,
+        av_lifetime += av_lifetime_year,
+        sd_lifetime += sd_lifetime_year,
+
+    return lifetimes, av_lifetime, sd_lifetime
+
+def interannual_mean(data, startyear, endyear, years):
     '''get the interannual mean with its standart deviation for
-    the time from startyear til endyear
+    the time period from startyear til endyear
     '''
+    # indices of startyear and endyear
     istart = np.where(np.array(years) == startyear)[0][0]
     iend = np.where(np.array(years) == endyear)[0][0]
     
     av = np.mean(data[istart:iend], axis=0)
-    sd = np.sqrt(np.var(data[istart:iend], axis=0))
+    sd = np.std(data[istart:iend], axis=0)
 
     return av, sd
+
+def interannual_mean_weighted(data, std, startyear, endyear, years):
+    '''get the weighted interannual mean with its standart deviation
+    for the time period from startyear til endyear for data that has
+    uncertainty std
+    '''
+    # indices of startyear and endyear
+    istart = np.where(np.array(years) == startyear)[0][0]
+    iend = np.where(np.array(years) == endyear)[0][0]
+    
+    # the weights are the inverse variances
+    values = np.array(data[istart:iend])
+    weights = 1 / np.array(std[istart:iend])**2
+    
+    weighted_mean = np.sum(values * weights, axis=0) / np.sum(weights, axis=0)
+    sd = np.sqrt(1 / np.sum(weights, axis=0))
+
+    return weighted_mean, sd
 
 def coarse_graining(field, coarse_grid_box_len_km, res_km):
     '''apply a coarse graining filter to field. res_km is the spatial
