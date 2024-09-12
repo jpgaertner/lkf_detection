@@ -14,7 +14,7 @@ path_stat = path + 'statistics/'
 
 # load mean ice concentration, total ice covered area, mean ice thickness,
 # and total ice volume for all analyzed years 
-data = np.load(path_stat + f'lkfs_paths_{res}.npz', allow_pickle=True)
+data = np.load(path_stat + f'lkfs_paths_{res}_all.npz', allow_pickle=True)
 years, lkfs, paths, paths_all = [data[key] for key in data.files]
 
 # load mean ice concentration, total ice covered area, mean ice thickness,
@@ -34,44 +34,54 @@ inds = [np.where(years_all==year)[0][0] for year in years]
 area_total = area_total[inds]
 
 # use already calculated resolutions (can be calculated either from the nc files like in
-# plot/area_thickness.ipynb, or from the lkf_data objects like in statistics_main.ipynb)
+# plot/area_thickness.ipynb, or from the lkf_data objects like in functions/statistics_functions.ipynb)
 if res == '4km': res_km = 4.337849218906646
 if res == '1km': res_km = 1.083648783567869
 
 # calculate metrics
 n_lkfs = get_n_lkfs(lkfs)
-rho_lkfs = n_lkfs / area_total * 10000
-length, mean_length, total_length = get_lkf_length(lkfs, res_km)
-lifetimes, mean_lifetime = get_lkf_lifetimes(paths)
+n_lkfs_per_area = n_lkfs / area_total * 10000 # in 1 / 10000 km2
+length, mean_length, mean_length_sd, total_length = get_lkf_length(lkfs, res_km) # in km
+total_length_per_area = total_length / area_total * 10000 # in km / 10000 km2
+lifetimes, mean_lifetime, mean_lifetime_sd = get_lkf_lifetimes(paths) # in days
 # lifetimes_all includes the lifetimes of LKFs that are
 # already counted in previous timesteps
-lifetimes_all, _ = get_lkf_lifetimes(paths_all)
+lifetimes_all, _, _ = get_lkf_lifetimes(paths_all) # in days
 
 # create lkf dictionary
 LKFs = dict()
 
-if True:
-    # calculate decadal mean and standart deviation of each lkf variable
-    # and store it in the dictionary
+# set this to false for the 1986 to 2100 run
+if False:
+    # calculate mean and standart deviation of each lkf variable
+    # for the two time periods where the 1 km data is available
     for ystart, yend in zip([2013, 2093], [2020, 2100]):
 
+        # if the variable has no uncertainty in a dataset/ year (eg number of lkfs at a specfic day),
+        # the interannual mean is the arithmetic mean.
+        # if the variable has an uncertainty in a dataset/ year (eg mean length of lkfs at a specfic day),
+        # the interannual mean is calculated via inverse variance weighting
         df = pd.DataFrame()
-        df['number av'], df['number sd']               = av_sd(n_lkfs, ystart, yend, years)
-        df['density av'], df['density sd']             = av_sd(rho_lkfs, ystart, yend, years)
-        df['mean length av'], df['mean length sd']     = av_sd(mean_length, ystart, yend, years)
-        df['total length av'], df['total length sd']   = av_sd(total_length, ystart, yend, years)
-        df['mean lifetime av'], df['mean lifetime sd'] = av_sd(mean_lifetime, ystart, yend, years)
+        df['number av'], df['number sd'] = interannual_mean(n_lkfs, ystart, yend, years)
+        df['number per area av'], df['number per area sd'] = interannual_mean(n_lkfs_per_area, ystart, yend, years)
+        df['mean length av'], df['mean length sd'] = interannual_mean_weighted(mean_length, mean_length_sd, ystart, yend, years)
+        df['total length av'], df['total length sd'] = interannual_mean(total_length, ystart, yend, years)
+        df['total length per area av'], df['total length per area sd'] = interannual_mean(total_length_per_area, ystart, yend, years)
+        df['mean lifetime av'], df['mean lifetime sd'] = interannual_mean_weighted(mean_lifetime, mean_lifetime_sd, ystart, yend, years)
 
-        decade = f'{ystart} - {yend}'
-        LKFs[decade] = df
+        LKFs[f'{ystart} - {yend}'] = df
 
 # store each lkf variable for each year
 for y, year in enumerate(years):
-    df_y = pd.DataFrame(n_lkfs[y], columns=['number'])
-    df_y['density']       = rho_lkfs[y]
-    df_y['mean length']   = mean_length[y]
-    df_y['total length']  = total_length[y]
-    df_y['mean lifetime'] = mean_lifetime[y]
+    df_y = pd.DataFrame()
+    df_y['number']           = n_lkfs[y]
+    df_y['number per area']  = n_lkfs_per_area[y]
+    df_y['mean length']      = mean_length[y]
+    df_y['mean length sd']   = mean_length_sd[y]
+    df_y['total length']     = total_length[y]
+    df_y['total length per area'] = total_length_per_area[y]
+    df_y['mean lifetime']    = mean_lifetime[y]
+    df_y['mean lifetime sd'] = mean_lifetime_sd[y]
     
     LKFs[f'{year}'] = df_y
     
