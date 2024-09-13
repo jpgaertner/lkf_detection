@@ -1,6 +1,6 @@
 #!/bin/bash
 
-years=(2015 2016)
+years=({2013..2020})
 step=10
 res="1km"
 
@@ -22,7 +22,7 @@ for year in "${years[@]}"; do
         
     # if the lkf folder does exist, check for the days that are missing
     else
-        # load the files of the detected lkfs
+        # load the file names of the detected lkfs
         lkf_files=($(ls "$path_detected_lkfs" | sort))
         lkf_files=("${lkf_files[@]/.ipynb_checkpoints}")
 
@@ -48,12 +48,12 @@ for year in "${years[@]}"; do
 
     # convert the bash array to a python list format and update it in the python file
     days_to_detect_python="[$(IFS=,; echo "${days_to_detect[*]}")]"
-    sed -i "s/^\(days_to_detect = np.array(\).*\$/\1$days_to_detect_python)/" detect_lkfs_chunks.py
+    sed -i "s|^\(days_to_detect = np.array(\).*|\1$days_to_detect_python)|" detect_lkfs_chunks.py
 
     # copy other variables into the python file
-    sed -i "s/^\(res\s*=\s*\).*\$/\1'$res'/" detect_lkfs_chunks.py
-    sed -i "s/^\(year\s*=\s*\).*\$/\1$year/" detect_lkfs_chunks.py
-    sed -i "s/^\(step\s*=\s*\).*\$/\1$step/" detect_lkfs_chunks.py
+    sed -i "s|^\(res = \).*|\1'$res'|" detect_lkfs_chunks.py
+    sed -i "s|^\(year = \).*|\1$year|" detect_lkfs_chunks.py
+    sed -i "s|^\(step = \).*|\1$step|" detect_lkfs_chunks.py
     
     startdays_of_chunks=()
     for (( i = 0; i < ${#days_to_detect[@]}; i += step )); do
@@ -61,7 +61,7 @@ for year in "${years[@]}"; do
     done
     
     for startday in "${startdays_of_chunks[@]}"; do
-        sed -i "s/^\(startday\s*=\s*\).*\$/\1$startday/" detect_lkfs_chunks.py
+        sed -i "s|^\(startday = \).*|\1$startday|" detect_lkfs_chunks.py
         # save as new file
         cp detect_lkfs_chunks.py /work/bk1377/a270230/python_scripts/detect_lkfs_chunks_${year}_${startday}.py
     done
@@ -69,13 +69,13 @@ for year in "${years[@]}"; do
 
     ### adjust job script and submit it ###
     
-    sed -i "s/^\(#SBATCH --job-name=\).*\$/\1d$year/" detection_jobs.sh
-    #sed -i "s/^\(#SBATCH --output=output_\).*\$/\1$year.txt/" detection_jobs.sh
+    sed -i "s|^\(#SBATCH --job-name=\).*|\1d$year|" detection_jobs.sh
+    #sed -i "s|^\(#SBATCH --output=output_\).*\$|\1$year.txt|" detection_jobs.sh
     ntasks=${#startdays_of_chunks[@]}
-    sed -i "s/^\(#SBATCH --ntasks=\).*\$/\1$ntasks/" detection_jobs.sh
+    sed -i "s|^\(#SBATCH --ntasks=\).*|\1$ntasks|" detection_jobs.sh
     startdays_of_chunks_str=$(printf '%s ' "${startdays_of_chunks[@]}")
-    sed -i "s/^\(startdays_of_chunks=\).*/\1(${startdays_of_chunks_str})/" detection_jobs.sh
-    sed -i "s/^\(year=\).*\$/\1$year/" detection_jobs.sh
+    sed -i "s|^\(startdays_of_chunks=\).*|\1(${startdays_of_chunks_str})|" detection_jobs.sh
+    sed -i "s|^\(year=\).*|\1$year|" detection_jobs.sh
 
     sbatch detection_jobs.sh
 done
