@@ -1,29 +1,16 @@
 import numpy as np
 import sys
-sys.path.insert(1, '/p/project/chhb19/gaertner2/lkf_tools/lkf_tools/')
+sys.path.insert(1, '/home/a/a270230/LKF/lkf_tools/lkf_tools/')
 from dataset import *
 import warnings
 warnings.filterwarnings('ignore')
 
-path = '/p/project/chhb19/gaertner2/data/awicm_cvmix/'
+path = '/work/bk1377/a270230/'
 path_ds = path + 'datasets/'
 
-path_scratch = '/p/scratch/chhb19/gaertner2/'
-path_nc = path_scratch + 'interpolated_fesom_output/1km/'
+year = 2013
+res = '4km'
 
+lkf_data = np.load(path_ds + f'ds_{year}_{res}.npy', allow_pickle=True)[0]
 
-years = [2094, 2095, 2096]
-
-for year in years:
-    lkf_data = process_dataset(netcdf_file = path_nc + f'1km_{year}.nc',
-                               output_path = path + 'lkfs/',
-                               dog_thres = 0.01,
-                               t_red = 1)
-
-    lkf_data.detect_lkfs(indexes=[0])
-    lkf_data.indexes = np.arange(365)
-
-    lkf_data.track_lkfs(indexes=np.arange(365))
-
-
-    np.save(path_ds + f'ds_{year}.npy', [lkf_data], allow_pickle=True)
+lkf_data.track_lkfs(indexes=np.arange(365))

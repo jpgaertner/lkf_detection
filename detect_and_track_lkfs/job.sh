@@ -1,14 +1,13 @@
-#!/bin/bash
-#SBATCH --job-name=2094_5_6
-#SBATCH --account=hhb19
-#SBATCH --partition=batch
+#!/bin/bash -l
+#SBATCH --job-name=detect
+#SBATCH --account=bk1377
+#SBATCH --partition=compute
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH -t 24:00:00
-#SBATCH -o output.txt
-#SBATCH -e output.txt
+#SBATCH -t 8:00:00
+#SBATCH --output=output.txt
 
 
 export OMP_NUM_THREADS=1
 
-python3 track_lkfs.py
+python3 detect_lkfs.py
