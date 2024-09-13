@@ -17,6 +17,26 @@ month_strings = [
     'July', 'August', 'September', 'October', 'November', 'December'
 ]
 
+# arcic basin 1km
+lkf_data = np.load('/work/bk1377/a270230/datasets/1km/ds_2013_1km.npy', allow_pickle=True)[0]
+a = max([0,lkf_data.index_y[0][0]-1])
+b = lkf_data.index_y[0][-1]+2
+c = max([0,lkf_data.index_x[0][0]-1])
+d = lkf_data.index_x[0][-1]+2 - 70*4
+e = lkf_data.red_fac
+lon_1km = lkf_data.lon[a:b:e,c:d:e]
+lat_1km = lkf_data.lat[a:b:e,c:d:e]
+
+# arcic basin 4km
+lkf_data = np.load('/work/bk1377/a270230/datasets/4km/ds_2013_4km.npy', allow_pickle=True)[0]
+a = max([0,lkf_data.index_y[0][0]-1])
+b = lkf_data.index_y[0][-1]+2
+c = max([0,lkf_data.index_x[0][0]-1])
+d = lkf_data.index_x[0][-1]+2 - 70
+e = lkf_data.red_fac
+lon_4km = lkf_data.lon[a:b:e,c:d:e]
+lat_4km = lkf_data.lat[a:b:e,c:d:e]
+
 def get_lkfs(files):
     '''files is a list containing the paths to the lkf_data files
     (see in detect_lkfs: np.save(path_ds + f'ds_{year}', [lkf_data])).
@@ -286,32 +306,33 @@ def interannual_mean_weighted(data, std, startyear, endyear, years):
 
     return weighted_mean, sd
 
-def coarse_graining(field, coarse_grid_box_len_km, res_km):
-    '''apply a coarse graining filter to field. res_km is the spatial
-    resolution of the input field, coarse_grid_box_len_km is the length
-    of one side of the coarse grid cell.
+def coarse_graining(field, res_km, coarse_grid_box_len_km):
+    ''' Apply a coarse-graining filter to a 2D field. The function fills the coarse grid
+    box with the mean value of the contained pixels. `res_km` is the spatial resolution 
+    of the input field, `coarse_grid_box_len_km` is the length of one side of the coarse grid cell.
     '''
+    if np.isnan(coarse_grid_box_len_km):
+        # don't do coarse graining
+        return field
+    else:
+        # coarse graining factor, how many original grid points make up on coarse resolution grid cell
+        coarse_fac = int(coarse_grid_box_len_km / res_km)
 
-    n_rows = round(np.shape(field)[0] * res_km / coarse_grid_box_len_km)
-    n_cols = round(np.shape(field)[1] * res_km / coarse_grid_box_len_km)
+        # shape of the coarse grained field 
+        new_shape = (field.shape[0]//coarse_fac, field.shape[1]//coarse_fac)
 
-    rows = np.array_split(field, n_rows, axis=0)
-    columns = []
-    for row in rows:
-        columns.append(np.array_split(row, n_cols, axis=1))
-    
-    for i in range(n_rows):
-        for j in range(n_cols):
-            if np.any(columns[i][j]==1):
-                columns[i][j] = np.ones_like(columns[i][j])
-                
-    assemble = []
-    for row in columns:
-        assemble.append(np.concatenate(row, axis=1))
-        
-    field = np.concatenate(assemble, axis=0)
-    
-    return field
+        # cut off rows/ columns so that the field is divisible by the coarse graining factor
+        field = field[:new_shape[0]*coarse_fac, :new_shape[1]*coarse_fac]
+
+        # reshape field into 4D:
+        # number of coarse rows, size of each block along rows, number of coarse columns, size of each block along columns
+        # this splits the field into blocks of shape (coarse_fac, coarse_fac)
+        field = field.reshape(new_shape[0], coarse_fac, new_shape[1], coarse_fac)
+
+        # compute the average within each coarse_fac x coarse_fac block
+        coarse_field = np.nanmean(field, axis=(1, 3))
+
+        return coarse_field
 
 def get_lkf_pixels(path_to_ncfile, i, dog_thres=0.01, aice_thresh=0, min_kernel=1, max_kernel=5, red_fac=1, skeleton_kernel=0, use_eps=True, plot=True, vmax=[0.4,0.5]):
     '''
