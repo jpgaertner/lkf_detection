@@ -59,6 +59,6 @@ for i_year, year in enumerate(years):
                 index_of_tracked_lkf = path_individual_lkf[1]
 
                 # set it to 3 (in the daily lkf panda series, index and lkf label is the same)
-                LKFs[f'{year} daily']['2'].loc[index_of_tracked_lkf, ('lead or ridge')] = 3
+                LKFs[f'{year} daily'][f'{day}'].loc[index_of_tracked_lkf, ('lead or ridge')] = int(3)
 
 np.save(path_stat + f'LKFs_{res}.npy', [LKFs])
