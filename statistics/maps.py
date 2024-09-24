@@ -12,17 +12,17 @@ path = '/work/bk1377/a270230/'
 path_ds   = path + f'datasets/{res}/'
 path_stat = path + 'statistics/'
 
-# if this is set to np.nan, no coarse graining is applied
-coarse_grid_box_len_km = np.nan
-
-LKFs = np.load(path_stat + f'LKFs_{res}_all.npy', allow_pickle=True)[0]
+LKFs = np.load(path_stat + f'LKFs_{res}.npy', allow_pickle=True)[0]
 years = [key for key in LKFs.keys() if len(key)==4]
+res_km = LKFs['res_km']
+
+# if this is set to res_km, no coarse graining is applied
+coarse_grid_box_len_km = 50
 
 if res == '4km':
-    res_km = 4.337849218906646
+    z = 70
     lon = lon_4km
 elif res == '1km':
-    res_km = 1.083648783567869
     z = 70*4
     lon = lon_1km
 
@@ -43,7 +43,8 @@ maps = dict()
 for year in years:
 
     maps[year] = dict()
-    lkf_data = np.load(path_ds + f'ds_{year}_{res}.npy', allow_pickle=True)[0] # used for the path to the lkf files
+    # used for the path to the lkf files
+    lkf_data = np.load(path_ds + f'ds_{year}_{res}.npy', allow_pickle=True)[0]
 
     # loop over all months, save monthly frequencies and monthly averages in the dictionary
     for startday, endday, month in zip(startdays, enddays, months):
@@ -52,7 +53,8 @@ for year in years:
 
         # these contain all data of the current month
         [coarse_lkf_map, coarse_lead_map, coarse_ridge_map, coarse_nq_map,
-        coarse_lifetime_map, coarse_length_map, coarse_curv_map] = [[] for _ in range(7)]
+        coarse_lifetime_map, coarse_length_map, coarse_curv_map, coarse_div_map
+        ] = [[] for _ in range(8)]
 
         days = np.arange(startday, endday)
         for day in days:
@@ -62,7 +64,8 @@ for year in years:
 
             # save lkf dataframe and load lkf data of the current day
             daily_lkfs = LKFs[f'{year} daily'][f'{day}']
-            lkfs = np.load(lkf_data.lkfpath.joinpath('lkf_%s_%03i.npy' %(lkf_data.netcdf_file.split('/')[-1].split('.')[0],(day))),allow_pickle=True)
+            lkfs = np.load(lkf_data.lkfpath.joinpath('lkf_%s_%03i.npy'
+                    %(lkf_data.netcdf_file.split('/')[-1].split('.')[0],(day))),allow_pickle=True)
 
             for i_lkf, lkf in enumerate(lkfs):
                 # get lkf pixel coordinates
@@ -86,6 +89,8 @@ for year in years:
                 curv_map[lkf_y, lkf_x] = daily_lkfs['curvature'][i_lkf]
 
             # apply coarse graining and add the daily maps to the month-lists
+            #div_map = lkf_data.calc_eps(day-1)[1][:,:-z]
+            #coarse_div_map      += coarse_graining(div_map, res_km, coarse_grid_box_len_km),
             coarse_lkf_map      += coarse_graining(lkf_map, res_km, coarse_grid_box_len_km),
             coarse_lead_map     += coarse_graining(lead_map, res_km, coarse_grid_box_len_km),
             coarse_ridge_map    += coarse_graining(ridge_map, res_km, coarse_grid_box_len_km),
@@ -95,6 +100,7 @@ for year in years:
             coarse_curv_map     += coarse_graining(curv_map, res_km, coarse_grid_box_len_km),
 
         # calculate the monthly values/ monthly means
+        #maps[year][month]['divergence'] = np.nanmean(coarse_div_map, axis=0)
         maps[year][month]['lkf frequency'] = np.nansum(coarse_lkf_map, axis=0) / len(days)
         maps[year][month]['lead frequency'] = np.nansum(coarse_lead_map, axis=0) / len(days)
         maps[year][month]['ridge frequency'] = np.nansum(coarse_ridge_map, axis=0) / len(days)
@@ -104,6 +110,7 @@ for year in years:
         maps[year][month]['curvature'] = np.nanmean(coarse_curv_map, axis=0)
 
         # replace np.nan with 0
+        #maps[year][month]['divergence'] = nan_to_0(maps[year][month]['divergence'])
         maps[year][month]['lifetime'] = nan_to_0(maps[year][month]['lifetime'])
         maps[year][month]['length'] = nan_to_0(maps[year][month]['length'])
         maps[year][month]['curvature'] = nan_to_0(maps[year][month]['curvature'])
