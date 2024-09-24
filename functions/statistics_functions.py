@@ -311,7 +311,7 @@ def coarse_graining(field, res_km, coarse_grid_box_len_km):
     box with the mean value of the contained pixels. `res_km` is the spatial resolution 
     of the input field, `coarse_grid_box_len_km` is the length of one side of the coarse grid cell.
     '''
-    if np.isnan(coarse_grid_box_len_km):
+    if coarse_grid_box_len_km==res_km:
         # don't do coarse graining
         return field
     else:
