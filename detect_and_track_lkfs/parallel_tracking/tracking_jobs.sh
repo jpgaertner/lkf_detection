@@ -1,8 +1,8 @@
 #!/bin/bash -l
-#SBATCH --job-name=t2020
+#SBATCH --job-name=t2097
 #SBATCH --account=bk1377
 #SBATCH --partition=compute
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --ntasks=36
 #SBATCH -t 8:00:00
 #SBATCH -o output.txt
@@ -11,7 +11,7 @@
 
 export OMP_NUM_THREADS=1
 
-year=2020
+year=2097
 step=10
 
 for day in $(seq 0 $step 365); do
