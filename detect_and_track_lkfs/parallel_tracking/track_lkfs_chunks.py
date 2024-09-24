@@ -1,14 +1,14 @@
 import numpy as np
 import sys
-sys.path.insert(1, '/home/a/a270230/LKF/lkf_tools/lkf_tools/')
+sys.path.insert(1, '../../lkf_tools/lkf_tools/')
 from dataset import *
 import warnings
 warnings.filterwarnings('ignore')
 
-path_ds = '/work/bk1377/a270230/datasets/'
+res = '1km'
+path_ds = f'/work/bk1377/a270230/datasets/{res}/'
 
-res = '4km'
-year = 2020
+year = 2097
 lower = 360
 step = 10
 
