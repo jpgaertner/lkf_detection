@@ -15,11 +15,7 @@ data = np.load(path_stat + f'lkfs_paths_{res}_all.npz', allow_pickle=True)
 years, lkfs, paths, paths_all = [data[key] for key in data.files]
 
 LKFs = np.load(path_stat + f'LKFs_{res}.npy', allow_pickle=True)[0]
-
-# use already calculated resolutions (can be calculated either from the nc files like in
-# plot/area_thickness.ipynb, or from the lkf_data objects like in functions/statistics_functions.ipynb)
-if res == '4km': res_km = 4.337849218906646
-if res == '1km': res_km = 1.083648783567869
+res_km = LKFs['res_km']
 
 # calculate the curvature of the lkfs according to
 # curvature = 1 - distance_between_start_and_end_of_lkf / length_of_lkf,
