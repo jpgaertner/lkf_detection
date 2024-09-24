@@ -96,5 +96,6 @@ for y, year in enumerate(years):
         
         LKFs[f'{year} daily'][f'{d+1}'] = df_d
 
-        
+LKFs['res_km'] = res_km
+
 np.save(path_stat + f'LKFs_{res}.npy', [LKFs])
