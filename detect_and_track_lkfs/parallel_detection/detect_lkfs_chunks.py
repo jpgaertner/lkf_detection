@@ -13,7 +13,6 @@ step = 10
 path = '/work/bk1377/a270230/'
 path_nc   = path + f'interpolated_fesom_output/{res}/'
 path_lkfs = path + f'lkfs/{res}/'
-path_detected_lkfs = path_lkfs + f'{year}_{res}'
 
 days_to_detect = np.array([170,177,187,196,197,204,207,208,209,210,214,219,224,225,226,235,236,237,238,239,244,249,250,255,256,257,265,268,269,276,286,289,290,297,307,316,317,318,330,340,360])
 
